@@ -3,9 +3,7 @@ package com.example.fakeglide.core
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.nfc.Tag
 import android.util.Log
-import androidx.compose.foundation.LocalIndication
 import com.example.fakeglide.cache.CacheConfig
 import com.example.fakeglide.cache.CacheRepositoryImpl
 import com.example.fakeglide.cache.DiskCache
@@ -45,65 +43,6 @@ class ImageLoader private constructor(context: Context, config: CacheConfig) {
         .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
         .build()
 
-    suspend fun load(request: ImageRequest): Bitmap? {
-        return withContext(Dispatchers.IO) {
-            try {
-                val key = genCacheKey(
-                    url = request.url,
-                    reqWidth = request.reqWidth,
-                    reqHeight = request.reqHeight,
-                )
-                // check cache
-                val originalBitmap = cache.get(key)
-                if (originalBitmap != null) {
-                    if (request.transformations.isNotEmpty()) {
-                        val transformedKey = genCacheKey(
-                            url = request.url,
-                            reqWidth = request.reqWidth,
-                            reqHeight = request.reqHeight,
-                            transformations = request.transformations
-                        )
-                        val transformedBitmap =
-                            applyTransformations(originalBitmap, request.transformations)
-
-                        cache.memoryCache.put(transformedKey, transformedBitmap)
-                        return@withContext transformedBitmap
-                    }
-
-                    return@withContext originalBitmap
-                }
-
-                // fetch from network
-                val networkBitmap =
-                    fetchFromNetwork(request.url, request.reqWidth, request.reqHeight)
-                        ?: return@withContext null
-
-                cache.put(key, networkBitmap)
-
-
-                // apply transformations
-                if (request.transformations.isNotEmpty()) {
-                    val transformedBitmap =
-                        applyTransformations(networkBitmap, request.transformations)
-                    val transformedKey = genCacheKey(
-                        url = request.url,
-                        reqWidth = request.reqWidth,
-                        reqHeight = request.reqHeight,
-                        transformations = request.transformations
-                    )
-                    cache.memoryCache.put(transformedKey, transformedBitmap)
-                    return@withContext transformedBitmap
-                }
-
-
-                return@withContext networkBitmap
-
-            } catch (e: CancellationException) {
-                Log.e(TAG, "cancelled: ${request.url}")
-                throw e
-            }
-        }
-    }
 
     suspend fun load2(request: ImageRequest): Bitmap? = withContext(Dispatchers.IO) {
         try {

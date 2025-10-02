@@ -20,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,7 +38,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FakeGlideTheme {
-                FakeGlideGallery()
+                DemoLoad1ImageScreen()
+//                DemoLoad100ImagesScreen()
             }
         }
     }
@@ -108,6 +110,8 @@ fun FakeGlideGallery() {
 fun FakeLoaderDemo() {
     var model by remember { mutableStateOf("https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg") }
 
+    var clicked by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier.padding(16.dp)
     ) {
@@ -127,19 +131,27 @@ fun FakeLoaderDemo() {
         }
         Spacer(modifier = Modifier.height(16.dp))
         Spacer(modifier = Modifier.height(16.dp))
-        FakeGlideImage(
-            model = model,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp)
-                .background(Color.Red),
-            loading = painterResource(id = android.R.drawable.ic_menu_gallery),
-            failure = painterResource(id = android.R.drawable.ic_delete),
-            contentDescription = "My image",
-            contentScale = ContentScale.Crop
-//            requestBuilderTransform = {
-//                    circleCrop()
-//            }
-        )
+        key(clicked) {
+            FakeGlideImage(
+                model = model,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(400.dp)
+                    .background(Color.Red),
+                loading = painterResource(id = R.drawable.ic_menu_gallery),
+                failure = painterResource(id = R.drawable.ic_delete),
+                contentDescription = "My image",
+                contentScale = ContentScale.Crop
+                //            requestBuilderTransform = {
+                //                    circleCrop()
+                //            }
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = { clicked = !clicked }
+        ) {
+            Text("Click me")
+        }
     }
 }
