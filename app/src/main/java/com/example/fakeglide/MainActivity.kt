@@ -6,7 +6,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,13 +24,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.fakeglide.compose.FakeGlideImage
-import com.example.fakeglide.transformation.CircleCrop
-import com.example.fakeglide.transformation.RoundedCornerCrop
 import com.example.fakeglide.ui.theme.FakeGlideTheme
 
 class MainActivity : ComponentActivity() {
@@ -41,7 +37,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FakeGlideTheme {
-                FakeLoaderDemo()
+                FakeGlideGallery()
             }
         }
     }
@@ -83,7 +79,9 @@ fun FakeGlideGallery() {
         }
     }
 
-    LazyColumn {
+    LazyColumn(
+        modifier = Modifier.padding(20.dp)
+    ) {
         items(
             items = imageUrls,
             key = { it }
@@ -92,13 +90,14 @@ fun FakeGlideGallery() {
             FakeGlideImage(
                 model = url,
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .background(Color.LightGray)
                     .size(300.dp)
                     .padding(bottom = 10.dp),
                 contentDescription = "Demo Image",
                 loading = painterResource(R.drawable.ic_menu_gallery),
                 failure = painterResource(R.drawable.ic_delete),
-//                requestBuilderTransform = { circleCrop() }
+                contentScale = ContentScale.Crop,
+                requestBuilderTransform = { circleCrop() }
             )
 
         }
@@ -132,13 +131,15 @@ fun FakeLoaderDemo() {
             model = model,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp),
+                .height(400.dp)
+                .background(Color.Red),
             loading = painterResource(id = android.R.drawable.ic_menu_gallery),
             failure = painterResource(id = android.R.drawable.ic_delete),
             contentDescription = "My image",
-            requestBuilderTransform = {
-                    roundedCornerCrop(200f).circleCrop()
-            }
+            contentScale = ContentScale.Crop
+//            requestBuilderTransform = {
+//                    circleCrop()
+//            }
         )
     }
 }

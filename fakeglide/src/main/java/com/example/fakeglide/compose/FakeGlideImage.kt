@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
@@ -28,6 +29,7 @@ fun FakeGlideImage(
     failure: Painter? = null,
     reqWidth: Int? = null,
     reqHeight: Int? = null,
+    contentScale: ContentScale = ContentScale.Fit,
     requestBuilderTransform: (RequestBuilder.() -> RequestBuilder)? = null,
 ) {
     val context = LocalContext.current
@@ -79,7 +81,9 @@ fun FakeGlideImage(
                 contentDescription = contentDescription,
                 modifier = modifier.onSizeChanged {
                     size.value = it
-                })
+                },
+                contentScale = contentScale
+            )
         }
 
         is ImageState.Error -> failure?.let {
