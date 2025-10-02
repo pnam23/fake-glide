@@ -3,8 +3,8 @@ package com.example.fakeglide.cache
 import android.graphics.Bitmap
 
 class CacheRepositoryImpl(
-    private val memoryCache: MemoryCache,
-    private val diskCache: DiskCache,
+    val memoryCache: MemoryCache,
+    val diskCache: DiskCache,
 ) : CacheRepository {
     override suspend fun put(url: String, bitmap: Bitmap) {
         memoryCache.put(url, bitmap)

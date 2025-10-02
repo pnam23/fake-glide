@@ -3,12 +3,15 @@ package com.example.fakeglide.core
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.nfc.Tag
 import android.util.Log
+import androidx.compose.foundation.LocalIndication
 import com.example.fakeglide.cache.CacheConfig
 import com.example.fakeglide.cache.CacheRepositoryImpl
 import com.example.fakeglide.cache.DiskCache
 import com.example.fakeglide.cache.MemoryCache
 import com.example.fakeglide.request.ImageRequest
+import com.example.fakeglide.transformation.Transformation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -36,7 +39,11 @@ class ImageLoader private constructor(context: Context, config: CacheConfig) {
         diskCache = DiskCache(context, config.diskCacheSize)
     )
 
-    private val okHttpClient = OkHttpClient()
+    private val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .build()
 
     suspend fun load(request: ImageRequest): Bitmap? {
         return withContext(Dispatchers.IO) {
@@ -44,29 +51,123 @@ class ImageLoader private constructor(context: Context, config: CacheConfig) {
                 val key = genCacheKey(
                     url = request.url,
                     reqWidth = request.reqWidth,
-                    reqHeight = request.reqHeight
+                    reqHeight = request.reqHeight,
                 )
-
                 // check cache
-                cache.get(key)?.let { bitmap ->
-                    return@withContext bitmap
+                val originalBitmap = cache.get(key)
+                if (originalBitmap != null) {
+                    if (request.transformations.isNotEmpty()) {
+                        val transformedKey = genCacheKey(
+                            url = request.url,
+                            reqWidth = request.reqWidth,
+                            reqHeight = request.reqHeight,
+                            transformations = request.transformations
+                        )
+                        val transformedBitmap =
+                            applyTransformations(originalBitmap, request.transformations)
+
+                        cache.memoryCache.put(transformedKey, transformedBitmap)
+                        return@withContext transformedBitmap
+                    }
+
+                    return@withContext originalBitmap
                 }
 
                 // fetch from network
-                val bitmap =
+                val networkBitmap =
                     fetchFromNetwork(request.url, request.reqWidth, request.reqHeight)
                         ?: return@withContext null
 
-                // put to cache
-                cache.put(key, bitmap)
+                cache.put(key, networkBitmap)
 
-                return@withContext bitmap
+
+                // apply transformations
+                if (request.transformations.isNotEmpty()) {
+                    val transformedBitmap =
+                        applyTransformations(networkBitmap, request.transformations)
+                    val transformedKey = genCacheKey(
+                        url = request.url,
+                        reqWidth = request.reqWidth,
+                        reqHeight = request.reqHeight,
+                        transformations = request.transformations
+                    )
+                    cache.memoryCache.put(transformedKey, transformedBitmap)
+                    return@withContext transformedBitmap
+                }
+
+
+                return@withContext networkBitmap
 
             } catch (e: CancellationException) {
                 Log.e(TAG, "cancelled: ${request.url}")
                 throw e
             }
         }
+    }
+
+    suspend fun load2(request: ImageRequest): Bitmap? = withContext(Dispatchers.IO) {
+        try {
+            // key for original image
+            val baseKey = genCacheKey(
+                url = request.url,
+                reqWidth = request.reqWidth,
+                reqHeight = request.reqHeight
+            )
+
+            // final key (original + transformations(if had))
+            val finalKey = if (request.transformations.isNotEmpty()) {
+                genCacheKey(
+                    url = request.url,
+                    reqWidth = request.reqWidth,
+                    reqHeight = request.reqHeight,
+                    transformations = request.transformations
+                )
+            } else baseKey
+
+            // if finalKey == baseKey
+            cache.get(finalKey)?.let { return@withContext it }
+
+            // if finalKey == baseKey and transformations not empty -> apply transformations on original
+            if (request.transformations.isNotEmpty()) {
+                cache.get(baseKey)?.let { original ->
+                    val transformed = applyTransformations(original, request.transformations)
+                    cache.memoryCache.put(finalKey, transformed)
+                    return@withContext transformed
+                }
+            }
+
+            // fetch from network
+            val networkBitmap = fetchFromNetwork(request.url, request.reqWidth, request.reqHeight)
+                ?: return@withContext null
+
+            // save to mem + disk cache
+            cache.put(baseKey, networkBitmap)
+
+            // apply transformations if fetch from network
+            if (request.transformations.isNotEmpty()) {
+                val transformed = applyTransformations(networkBitmap, request.transformations)
+                cache.memoryCache.put(finalKey, transformed)
+                return@withContext transformed
+            }
+
+            return@withContext networkBitmap
+
+        } catch (e: CancellationException) {
+            Log.e(TAG, "Cancelled: ${request.url}")
+            throw e
+        }
+    }
+
+
+    private fun applyTransformations(
+        bitmap: Bitmap,
+        transformations: List<Transformation>,
+    ): Bitmap {
+        var result = bitmap
+        transformations.forEach { t ->
+            result = t.transform(result)
+        }
+        return result
     }
 
     private suspend fun fetchFromNetwork(url: String, reqWidth: Int, reqHeight: Int): Bitmap? =
@@ -117,7 +218,11 @@ class ImageLoader private constructor(context: Context, config: CacheConfig) {
             }
         }
 
-    fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+    private fun calculateInSampleSize(
+        options: BitmapFactory.Options,
+        reqWidth: Int,
+        reqHeight: Int,
+    ): Int {
         // Raw height and width of image
         val (height: Int, width: Int) = options.run { outHeight to outWidth }
         var inSampleSize = 1
@@ -137,7 +242,17 @@ class ImageLoader private constructor(context: Context, config: CacheConfig) {
         return inSampleSize
     }
 
-    private fun genCacheKey(url: String, reqWidth: Int, reqHeight: Int): String {
-        return "$url,$reqWidth,$reqHeight"
+    private fun genCacheKey(
+        url: String, reqWidth: Int, reqHeight: Int,
+        transformations: List<Transformation> = emptyList(),
+    ): String {
+        val transformedKey = transformations?.joinToString(separator = "_") { it.key() }
+        val key = if (transformedKey.isNullOrEmpty()) {
+            "$url,${reqWidth}x${reqHeight}"
+        } else {
+            "$url,${reqWidth}x${reqHeight},$transformedKey"
+        }
+
+        return key
     }
 }

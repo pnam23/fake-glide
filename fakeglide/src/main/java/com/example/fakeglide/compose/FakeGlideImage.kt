@@ -15,6 +15,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
 import com.example.fakeglide.core.ImageLoader
 import com.example.fakeglide.request.ImageRequest
+import com.example.fakeglide.request.RequestBuilder
+import com.example.fakeglide.transformation.Transformation
 import com.example.fakeglide.util.ComposeSizeResolver
 
 @Composable
@@ -26,6 +28,7 @@ fun FakeGlideImage(
     failure: Painter? = null,
     reqWidth: Int? = null,
     reqHeight: Int? = null,
+    requestBuilderTransform: (RequestBuilder.() -> RequestBuilder)? = null,
 ) {
     val context = LocalContext.current
     val imageLoader = remember { ImageLoader.getInstance(context) }
@@ -41,16 +44,21 @@ fun FakeGlideImage(
     val finalReqWidth by remember { mutableStateOf(width) }
     val finalReqHeight by remember { mutableStateOf(height) }
 
+
+
+    // build request with transform
+    val request = remember(model, finalReqWidth, finalReqHeight) {
+        var builder = RequestBuilder(model).override(finalReqWidth, finalReqHeight)
+        if (requestBuilderTransform != null) {
+            builder = builder.requestBuilderTransform()
+        }
+        builder.build()
+    }
+
     LaunchedEffect(model) {
         state.value = ImageState.Loading
 
-        val request = ImageRequest(
-            url = model,
-            reqWidth = finalReqWidth,
-            reqHeight = finalReqHeight
-        )
-
-        val bitmap = imageLoader.load(request)
+        val bitmap = imageLoader.load2(request)
 
         if (bitmap != null) {
             bitmapState.value = bitmap.asImageBitmap()

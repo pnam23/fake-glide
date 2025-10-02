@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,10 +26,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.fakeglide.compose.FakeGlideImage
+import com.example.fakeglide.transformation.CircleCrop
+import com.example.fakeglide.transformation.RoundedCornerCrop
 import com.example.fakeglide.ui.theme.FakeGlideTheme
 
 class MainActivity : ComponentActivity() {
@@ -72,7 +77,6 @@ fun FakeGlideApp() {
 
 @Composable
 fun FakeGlideGallery() {
-
     val imageUrls = remember {
         (1..100).map { i ->
             "https://picsum.photos/id/$i/200/300"
@@ -94,6 +98,7 @@ fun FakeGlideGallery() {
                 contentDescription = "Demo Image",
                 loading = painterResource(R.drawable.ic_menu_gallery),
                 failure = painterResource(R.drawable.ic_delete),
+//                requestBuilderTransform = { circleCrop() }
             )
 
         }
@@ -103,8 +108,6 @@ fun FakeGlideGallery() {
 @Composable
 fun FakeLoaderDemo() {
     var model by remember { mutableStateOf("https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg") }
-
-    var log by remember { mutableStateOf("Idle") }
 
     Column(
         modifier = Modifier.padding(16.dp)
@@ -124,7 +127,6 @@ fun FakeLoaderDemo() {
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Status: $log")
         Spacer(modifier = Modifier.height(16.dp))
         FakeGlideImage(
             model = model,
@@ -132,7 +134,11 @@ fun FakeLoaderDemo() {
                 .fillMaxWidth()
                 .height(300.dp),
             loading = painterResource(id = android.R.drawable.ic_menu_gallery),
-            failure = painterResource(id = android.R.drawable.ic_delete)
+            failure = painterResource(id = android.R.drawable.ic_delete),
+            contentDescription = "My image",
+            requestBuilderTransform = {
+                    roundedCornerCrop(200f).circleCrop()
+            }
         )
     }
 }
