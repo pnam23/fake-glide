@@ -107,13 +107,12 @@ class ImageLoader private constructor(context: Context, config: CacheConfig) {
 
                 val bitmap = BitmapFactory.decodeFile(tempFile.absolutePath, decodeOptions)
 
+                tempFile.delete()
                 val endTime = System.currentTimeMillis()
                 Log.d(
                     TAG,
                     "Network: $url, time=${endTime - startTime}ms, original=${boundsOptions.outWidth}x${boundsOptions.outHeight}, sampleSize=$sampleSize, decoded=${bitmap?.width}x${bitmap?.height}"
                 )
-
-                tempFile.delete()
                 return@withContext bitmap
             }
         }

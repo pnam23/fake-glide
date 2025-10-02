@@ -3,6 +3,7 @@ package com.example.fakeglide.compose
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -34,11 +35,13 @@ fun FakeGlideImage(
         mutableStateOf<IntSize?>(null)
     }
 
-    val (finalReqWidth, finalReqHeight) =
+    val (width, height) =
         ComposeSizeResolver.resolve(reqWidth, reqHeight, size.value)
 
+    val finalReqWidth by remember { mutableStateOf(width) }
+    val finalReqHeight by remember { mutableStateOf(height) }
 
-    LaunchedEffect(model, size.value) {
+    LaunchedEffect(model) {
         state.value = ImageState.Loading
 
         val request = ImageRequest(
