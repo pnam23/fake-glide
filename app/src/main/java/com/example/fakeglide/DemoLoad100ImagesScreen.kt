@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun DemoLoad100ImagesScreen() {
     val imageUrls = remember {
-        (1..10).map { i ->
-            "https://picsum.photos/id/$i/200/300"
+        (1..100).map { i ->
+            "https://picsum.photos/200/300?random=$i"
         }
     }
 

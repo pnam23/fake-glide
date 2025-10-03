@@ -39,9 +39,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             FakeGlideTheme {
 //                DemoLoad1ImageScreen()
-//                DemoLoad100ImagesScreen()
+                DemoLoad100ImagesScreen()
 //                FakeLoaderDemo() //cancellation
-                FakeGlideGallery()
+//                FakeGlideGallery()
             }
         }
     }
@@ -79,7 +79,7 @@ fun FakeGlideApp() {
 fun FakeGlideGallery() {
     val imageUrls = remember {
         (1..100).map { i ->
-            "https://picsum.photos/id/$i/200/300"
+            "https://picsum.photos/200/300?random=$i"
         }
     }
 
@@ -101,7 +101,7 @@ fun FakeGlideGallery() {
                 loading = painterResource(R.drawable.ic_menu_gallery),
                 failure = painterResource(R.drawable.ic_delete),
                 contentScale = ContentScale.Crop,
-                requestBuilderTransform = { circleCrop() }
+//                requestBuilderTransform = { circleCrop() }
             )
 
         }
