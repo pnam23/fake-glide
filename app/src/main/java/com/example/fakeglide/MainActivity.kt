@@ -38,8 +38,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FakeGlideTheme {
-//                DemoLoad1ImageScreen()
-                DemoLoad100ImagesScreen()
+                DemoLoad1ImageScreen()
+//                DemoLoad100ImagesScreen()
+//                FakeGlideApp()
 //                FakeLoaderDemo() //cancellation
 //                FakeGlideGallery()
             }
@@ -52,24 +53,24 @@ class MainActivity : ComponentActivity() {
 fun FakeGlideApp() {
     var reloaded by remember { mutableStateOf(false) }
     Column {
-        if (!reloaded) {
+        key(reloaded) {
             FakeGlideImage(
-                model = "https://svs.gsfc.nasa.gov/vis/a020000/a020200/a020255/frames/3840x2160_16x9_60p/Shot48/Shot48Frames/Shot48.00011.png",
+                model = "https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg",
                 modifier = Modifier
-                    .size(300.dp)
+//                    .size(300.dp)
                     .background(Color.Red),
                 contentDescription = "Demo Image",
+                contentScale = ContentScale.Fit,
                 loading = painterResource(R.drawable.ic_menu_gallery),
                 failure = painterResource(R.drawable.ic_delete),
-//                reqWidth = 200,
-//                reqHeight = 200,
+//                requestBuilderTransform = { circleCrop() }
             )
         }
         Button(
             onClick = { reloaded = !reloaded },
             modifier = Modifier.padding(20.dp)
         ) {
-            Text(if (reloaded) "Reload" else "Cancel")
+            Text("Reload")
         }
     }
 

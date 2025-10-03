@@ -192,7 +192,7 @@ fun ImageListTotalTime_FGI(urls: List<String>, modifier: Modifier = Modifier) {
                 onFinished = { _, displayDuration, success ->
                     if (success && displayDuration != null) {
                         displayedSet.add(url)
-                        if (displayedSet.size == urls.size) {
+                        if (displayedSet.size == 100) {
                             // tất cả ảnh đã display -> lấy thời gian hiện tại
                             allDisplayedTime = System.currentTimeMillis() - startTime
                         }

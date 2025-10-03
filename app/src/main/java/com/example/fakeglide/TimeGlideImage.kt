@@ -119,8 +119,7 @@ fun ImageListTotalTime_GI(
                         if (loadCompleted && displayTime == null) {
                             displayTime = System.currentTimeMillis() - startTime
                             displayedSet.add(url)
-                            if (displayedSet.size == urls.size) {
-                                // tất cả ảnh đã display
+                            if (displayedSet.size == 100) {
                                 allDisplayedTime = System.currentTimeMillis() - startTime
                             }
                         }

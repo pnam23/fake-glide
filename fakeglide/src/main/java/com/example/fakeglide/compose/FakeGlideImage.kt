@@ -41,13 +41,8 @@ fun FakeGlideImage(
         mutableStateOf<IntSize?>(null)
     }
 
-    val (width, height) =
+    val (finalReqWidth, finalReqHeight) =
         ComposeSizeResolver.resolve(reqWidth, reqHeight, size.value)
-
-    val finalReqWidth by remember { mutableStateOf(width) }
-    val finalReqHeight by remember { mutableStateOf(height) }
-
-
 
     // build request with transform
     val request = remember(model, finalReqWidth, finalReqHeight) {

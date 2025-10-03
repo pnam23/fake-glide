@@ -59,7 +59,6 @@ class ImageLoader private constructor(context: Context, config: CacheConfig) {
                 reqHeight = request.reqHeight
             )
 
-            // final key (original + transformations(if had))
             val finalKey = if (request.transformations.isNotEmpty()) {
                 genCacheKey(
                     url = request.url,
@@ -69,7 +68,6 @@ class ImageLoader private constructor(context: Context, config: CacheConfig) {
                 )
             } else baseKey
 
-            // if finalKey == baseKey
             cache.get(finalKey)?.let { return@withContext it }
 
             // if finalKey == baseKey and transformations not empty -> apply transformations on original
