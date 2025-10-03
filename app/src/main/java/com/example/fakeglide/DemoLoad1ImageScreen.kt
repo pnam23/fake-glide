@@ -19,8 +19,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun DemoLoad1ImageScreen() {
 
-    val url by remember { mutableStateOf("https://svs.gsfc.nasa.gov/vis/a020000/a020200/a020255/frames/3840x2160_16x9_60p/Shot48/Shot48Frames/Shot48.00049.png") }
-//    val url by remember { mutableStateOf("https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg") }
+//    val url by remember { mutableStateOf("https://svs.gsfc.nasa.gov/vis/a020000/a020200/a020255/frames/3840x2160_16x9_60p/Shot48/Shot48Frames/Shot48.00049.png") }
+    val url by remember { mutableStateOf("https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg") }
 
     var reloaded by remember { mutableStateOf(false) }
 

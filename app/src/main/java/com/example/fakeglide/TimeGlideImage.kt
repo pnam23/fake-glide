@@ -36,7 +36,7 @@ fun SingleImageWithTime_GI(
     var source by remember { mutableStateOf<String?>(null) }
     var loadCompleted by remember { mutableStateOf(false) }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column {
         GlideImage(
             model = model,
             contentDescription = "Glide image",
@@ -126,6 +126,7 @@ fun ImageListTotalTime_GI(
                         }
                     },
                 loading = placeholder(android.R.drawable.ic_menu_gallery),
+                failure = placeholder(android.R.drawable.ic_delete),
                 requestBuilderTransform = { rb ->
                     rb.listener(
                         object : RequestListener<Drawable> {

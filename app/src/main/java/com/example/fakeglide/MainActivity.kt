@@ -38,8 +38,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FakeGlideTheme {
-                DemoLoad1ImageScreen()
-//                DemoLoad100ImagesScreen()
+//                DemoLoad1ImageScreen()
+                DemoLoad100ImagesScreen()
             }
         }
     }

@@ -188,6 +188,7 @@ fun ImageListTotalTime_FGI(urls: List<String>, modifier: Modifier = Modifier) {
                 model = url,
                 modifier = modifier,
                 loading = painterResource(android.R.drawable.ic_menu_gallery),
+                failure = painterResource(android.R.drawable.ic_delete),
                 onFinished = { _, displayDuration, success ->
                     if (success && displayDuration != null) {
                         displayedSet.add(url)
