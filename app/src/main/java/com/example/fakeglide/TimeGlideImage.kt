@@ -100,10 +100,18 @@ fun ImageListTotalTime_GI(
     val displayedSet = remember { mutableStateSetOf<String>() }
 
     Column {
-
-        allDisplayedTime?.let {
-            Text("Total time: $it ms")
+        if (allDisplayedTime!= null) {
+            Text(
+                "Total time: $allDisplayedTime ms",
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        }else {
+            Text(
+                "Loading...",
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
         }
+
         Spacer(modifier = Modifier.height(12.dp))
 
         urls.forEach { url ->

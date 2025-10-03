@@ -6,9 +6,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,6 +31,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.fakeglide.compose.FakeGlideImage
 import com.example.fakeglide.ui.theme.FakeGlideTheme
 
@@ -38,12 +45,44 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FakeGlideTheme {
-                DemoLoad1ImageScreen()
-//                DemoLoad100ImagesScreen()
-//                FakeGlideApp()
-//                FakeLoaderDemo() //cancellation
-//                FakeGlideGallery()
+               AppNavHost()
             }
+        }
+    }
+}
+
+@Composable
+fun AppNavHost(navController: NavHostController = rememberNavController()) {
+    NavHost(navController = navController, startDestination = "demo") {
+        composable("demo") { DemoScreen(navController) }
+        composable("load1") { DemoLoad1ImageScreen() }
+        composable("load100") { DemoLoad100ImagesScreen() }
+        composable("cancel") { FakeLoaderDemo() }
+    }
+}
+
+
+@Composable
+fun DemoScreen(navController: NavController) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+    ) {
+        Button(onClick = { navController.navigate("load1") }) {
+            Text("Load 1 image")
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Button(onClick = { navController.navigate("load100") }) {
+            Text("Load 100 images")
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Button(onClick = { navController.navigate("cancel") }) {
+            Text("Cancellation test")
         }
     }
 }

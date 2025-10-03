@@ -49,7 +49,6 @@ fun TimedFakeGlideImage(
     var state by remember { mutableStateOf<ImageState>(ImageState.Loading) }
     var size by remember { mutableStateOf<IntSize?>(null) }
 
-    // để giữ thời điểm bắt đầu và load xong
     val startTime = remember(model) { System.currentTimeMillis() }
     var loadCompleteTime by remember { mutableStateOf<Long?>(null) }
 
@@ -77,7 +76,6 @@ fun TimedFakeGlideImage(
             bitmapState = bitmap.asImageBitmap()
             state = ImageState.Success
             loadCompleteTime = now
-            // báo trước thời gian load xong bitmap
             onFinished?.invoke(loadDuration, null, true)
         } else {
             state = ImageState.Error
@@ -99,7 +97,6 @@ fun TimedFakeGlideImage(
                         .onSizeChanged { newSize -> size = newSize }
                         .drawWithContent {
                             drawContent()
-                            // chỉ callback khi lần đầu render
                             loadCompleteTime?.let { loadDoneAt ->
                                 val displayDuration = System.currentTimeMillis() - startTime
                                 onFinished?.invoke(
@@ -107,7 +104,7 @@ fun TimedFakeGlideImage(
                                     displayDuration,
                                     true
                                 )
-                                loadCompleteTime = null // tránh gọi nhiều lần
+                                loadCompleteTime = null
                             }
                         },
                     contentScale = contentScale
@@ -136,12 +133,10 @@ fun SingleImageWithTime_FGI(url: String, modifier: Modifier = Modifier) {
             onFinished = { loadDuration, displayDuration, isSuccess ->
                 if (isSuccess) {
                     if (displayDuration == null) {
-                        // mới chỉ load bitmap xong
                         duration = loadDuration
                         success = true
                         displayed = false
                     } else {
-                        // đã render trên UI
                         duration = displayDuration
                         success = true
                         displayed = true
@@ -170,15 +165,22 @@ fun SingleImageWithTime_FGI(url: String, modifier: Modifier = Modifier) {
 
 @Composable
 fun ImageListTotalTime_FGI(urls: List<String>, modifier: Modifier = Modifier) {
-    // thời điểm bắt đầu (tính lúc composable render lần đầu)
     val startTime = remember { System.currentTimeMillis() }
     var allDisplayedTime by remember { mutableStateOf<Long?>(null) }
     val displayedSet = remember { mutableStateSetOf<String>() }
 
     Column {
 
-        allDisplayedTime?.let {
-            Text("Total time: $it ms")
+        if (allDisplayedTime!= null) {
+            Text(
+                "Total time: $allDisplayedTime ms",
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        }else {
+            Text(
+                "Loading...",
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
         }
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -193,7 +195,6 @@ fun ImageListTotalTime_FGI(urls: List<String>, modifier: Modifier = Modifier) {
                     if (success && displayDuration != null) {
                         displayedSet.add(url)
                         if (displayedSet.size == 100) {
-                            // tất cả ảnh đã display -> lấy thời gian hiện tại
                             allDisplayedTime = System.currentTimeMillis() - startTime
                         }
                     }
