@@ -11,12 +11,18 @@ import com.example.fakeglide.cache.MemoryCache
 import com.example.fakeglide.request.ImageRequest
 import com.example.fakeglide.transformation.Transformation
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.coroutines.resume
 
 private const val TAG = "FG_ImageLoader"
 
@@ -110,51 +116,61 @@ class ImageLoader private constructor(context: Context, config: CacheConfig) {
     }
 
     private suspend fun fetchFromNetwork(url: String, reqWidth: Int, reqHeight: Int): Bitmap? =
-        withContext(Dispatchers.IO) {
+        suspendCancellableCoroutine { cont ->
             val request = Request.Builder().url(url).build()
-
             val startTime = System.currentTimeMillis()
+            val call = okHttpClient.newCall(request)
 
-            okHttpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return@withContext null
+            cont.invokeOnCancellation {
+                call.cancel() // khi coroutine bị cancel thì hủy HTTP call
+            }
 
-                val body = response.body ?: return@withContext null
+            call.enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    if (!cont.isCancelled) cont.resume(null)
+                }
 
-                // Ghi xuống file cache tạm để decode 2 lần
-                val tempFile = File.createTempFile("img_cache", null)
-                body.byteStream().use { input ->
-                    FileOutputStream(tempFile).use { output ->
-                        input.copyTo(output)
+                override fun onResponse(call: Call, response: Response) {
+                    if (!response.isSuccessful) {
+                        cont.resume(null)
+                        return
+                    }
+                    val body = response.body ?: return cont.resume(null)
+
+                    try {
+                        // Đọc body → file tạm
+                        val tempFile = File.createTempFile("img_cache", null)
+                        body.byteStream().use { input ->
+                            FileOutputStream(tempFile).use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+
+                        // Decode bounds
+                        val boundsOptions =
+                            BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                        BitmapFactory.decodeFile(tempFile.absolutePath, boundsOptions)
+
+                        val sampleSize = calculateInSampleSize(boundsOptions, reqWidth, reqHeight)
+
+                        val decodeOptions = BitmapFactory.Options().apply {
+                            inSampleSize = sampleSize
+                            inPreferredConfig = Bitmap.Config.RGB_565
+                        }
+                        val bitmap = BitmapFactory.decodeFile(tempFile.absolutePath, decodeOptions)
+                        tempFile.delete()
+                        val endTime = System.currentTimeMillis()
+                        Log.d(
+                            TAG,
+                            "Network: $url, time=${endTime - startTime}ms, original=${boundsOptions.outWidth}x${boundsOptions.outHeight}, sampleSize=$sampleSize, decoded=${bitmap?.width}x${bitmap?.height}"
+                        )
+
+                        cont.resume(bitmap)
+                    } catch (e: Exception) {
+                        cont.resume(null)
                     }
                 }
-
-                // Decode lần 1: bounds
-                val boundsOptions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                BitmapFactory.decodeFile(tempFile.absolutePath, boundsOptions)
-
-                // Tính sample size
-                val sampleSize = calculateInSampleSize(
-                    options = boundsOptions,
-                    reqWidth = reqWidth,
-                    reqHeight = reqHeight
-                )
-
-                // Decode lần 2
-                val decodeOptions = BitmapFactory.Options().apply {
-                    inSampleSize = sampleSize
-                    inPreferredConfig = Bitmap.Config.RGB_565
-                }
-
-                val bitmap = BitmapFactory.decodeFile(tempFile.absolutePath, decodeOptions)
-
-                tempFile.delete()
-                val endTime = System.currentTimeMillis()
-                Log.d(
-                    TAG,
-                    "Network: $url, time=${endTime - startTime}ms, original=${boundsOptions.outWidth}x${boundsOptions.outHeight}, sampleSize=$sampleSize, decoded=${bitmap?.width}x${bitmap?.height}"
-                )
-                return@withContext bitmap
-            }
+            })
         }
 
     private fun calculateInSampleSize(

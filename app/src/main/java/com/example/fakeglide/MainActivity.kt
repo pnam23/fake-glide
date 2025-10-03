@@ -39,7 +39,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             FakeGlideTheme {
 //                DemoLoad1ImageScreen()
-                DemoLoad100ImagesScreen()
+//                DemoLoad100ImagesScreen()
+//                FakeLoaderDemo() //cancellation
+                FakeGlideGallery()
             }
         }
     }
@@ -108,7 +110,7 @@ fun FakeGlideGallery() {
 
 @Composable
 fun FakeLoaderDemo() {
-    var model by remember { mutableStateOf("https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg") }
+    var model by remember { mutableStateOf("https://svs.gsfc.nasa.gov/vis/a020000/a020200/a020255/frames/3840x2160_16x9_60p/Shot48/Shot48Frames/Shot48.00002.png") }
 
     var clicked by remember { mutableStateOf(false) }
 
@@ -117,17 +119,18 @@ fun FakeLoaderDemo() {
     ) {
         Row {
             Button(onClick = {
-                model = "https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg"
+                model =
+                    "https://svs.gsfc.nasa.gov/vis/a020000/a020200/a020255/frames/3840x2160_16x9_60p/Shot48/Shot48Frames/Shot48.00002.png"
             }) {
                 Text("Load URL 1")
             }
             Spacer(modifier = Modifier.width(8.dp))
             Button(onClick = {
-                model =
-                    "https://svs.gsfc.nasa.gov/vis/a020000/a020200/a020255/frames/3840x2160_16x9_60p/Shot48/Shot48Frames/Shot48.00002.png"
+                model = "https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg"
             }) {
                 Text("Load URL 2")
             }
+
         }
         Spacer(modifier = Modifier.height(16.dp))
         Spacer(modifier = Modifier.height(16.dp))
@@ -151,7 +154,7 @@ fun FakeLoaderDemo() {
         Button(
             onClick = { clicked = !clicked }
         ) {
-            Text("Click me")
+            Text("Reload")
         }
     }
 }
